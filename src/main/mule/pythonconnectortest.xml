@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="ee1e40b7-1c2c-4891-8e9d-39843de9f715" >
+		<http:listener-connection host="0.0.0.0" port="8086" />
+	</http:listener-config>
+	<flow name="pythonconnectortestFlow" doc:id="b82ec622-e4ea-4134-ae1f-2d4c7bb6ff37" >
+		<http:listener doc:name="Listener" doc:id="cd65ce2e-6219-410a-b1cb-82ebb870e268" config-ref="HTTP_Listener_config" path="/callpython"/>
+		<ee:transform doc:name="Transform Message" doc:id="7c36abd2-bc55-46ea-b58b-5b7738da17ee" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+    "EmployeeDetails": {
+        "EmpId": "1234",
+        "FirstName": "Sachin",
+        "LastName": "Tendulkar"
+    }
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<scripting:execute engine="python" doc:id="152bf5cb-3ec7-43d1-bd32-b3c11c95596b" doc:name="PythonCode">
+			<scripting:code ><![CDATA[result = (''.join(list(FirstName))).replace('a','e')]]></scripting:code>
+			<scripting:parameters ><![CDATA[#[{FirstName:payload.EmployeeDetails.FirstName,LastName:payload.EmployeeDetails.LastName}]]]></scripting:parameters>
+		</scripting:execute>
+		<ee:transform doc:name="Transform Message" doc:id="ecf03a29-a3c8-4b6c-891a-3a19b17ad425" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"TotalPayment": payload
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="da333837-1f28-4eec-9643-4ad943f18f43" message='"the totalpayment is : " #[payload]'/>
+	</flow>
+</mule>
